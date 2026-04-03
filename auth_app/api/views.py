@@ -1,7 +1,8 @@
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
+from rest_framework import status
 from rest_framework.authtoken.models import Token
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -26,8 +27,8 @@ class RegistrationView(APIView):
                 "user_id": saved_account.id
             }, status=201)
 
-        return Response(serializer.errors, status=400)
-    
+        return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
+
 
 class LoginView(APIView):
     permission_classes = [AllowAny]
@@ -50,7 +51,15 @@ class LoginView(APIView):
                     "email": user.email,
                     "user_id": user.id
                 }, status=200)
-            
-            return Response({"error": "Invalid email or password"}, status=400)
-        
-        return Response(serializer.errors, status=400)
+
+            return Response({"error": "Invalid email or password"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        request.user.auth_token.delete() 
+        return Response({"detail": "Logout successful. Token has been deleted."}, status=status.HTTP_200_OK)
