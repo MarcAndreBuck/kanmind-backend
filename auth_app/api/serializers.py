@@ -11,8 +11,15 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
-    fullname = serializers.CharField(write_only=True)
-    repeated_password = serializers.CharField(write_only=True)
+    fullname = serializers.CharField(write_only=True, required=True, error_messages={
+        "required": "fullname is required."})
+    email = serializers.EmailField(write_only=True, required=True, error_messages={
+        "required": "Email is required."})
+    password = serializers.CharField(write_only=True, required=True, error_messages={
+        "required": "Password is required."})
+    repeated_password = serializers.CharField(write_only=True, required=True, error_messages={
+        "required": "Please confirm your password."
+    })
 
     class Meta:
         model = User
@@ -47,5 +54,8 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
 
 class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)
+    email = serializers.EmailField(write_only=True, required=True, error_messages={
+        "required": "Email is required."})
+    password = serializers.CharField(write_only=True, required=True, error_messages={
+        "required": "Password is required."
+    })
