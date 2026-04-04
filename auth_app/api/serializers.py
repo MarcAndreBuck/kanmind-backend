@@ -59,3 +59,18 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True, required=True, error_messages={
         "required": "Password is required."
     })
+
+
+class EmailCheckSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+
+
+class EmailCheckResponseSerializer(serializers.ModelSerializer):
+    fullname = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ["id", "email", "fullname"]
+
+    def get_fullname(self, obj):
+        return obj.profile.fullname

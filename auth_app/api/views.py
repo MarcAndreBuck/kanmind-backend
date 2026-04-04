@@ -6,7 +6,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .serializers import LoginSerializer, RegistrationSerializer
+from .serializers import EmailCheckResponseSerializer, EmailCheckSerializer, LoginSerializer, RegistrationSerializer
 
 
 class RegistrationView(APIView):
@@ -61,5 +61,28 @@ class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        request.user.auth_token.delete() 
+        request.user.auth_token.delete()
         return Response({"detail": "Logout successful. Token has been deleted."}, status=status.HTTP_200_OK)
+
+
+class EmailCheckView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = EmailCheckSerializer(data=request.query_params)
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        email = serializer.validated_data["email"]
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response(
+                {"detail": "Email not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        response_serializer = EmailCheckResponseSerializer(user)
+        return Response(response_serializer.data, status=status.HTTP_200_OK)
