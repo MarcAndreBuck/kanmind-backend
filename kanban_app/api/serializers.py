@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from kanban_app.models import Board
+from kanban_app.models import Board , Task
 
 
 class BoardMemberSerializer(serializers.ModelSerializer):
@@ -43,13 +43,13 @@ class BoardListSerializer(serializers.ModelSerializer):
         return obj.members.count()
 
     def get_ticket_count(self, obj):
-        return 0
+        return obj.tasks.count()
 
     def get_tasks_to_do_count(self, obj):
-        return 0
+        return obj.tasks.filter(status="to-do").count()
 
     def get_tasks_high_prio_count(self, obj):
-        return 0
+        return obj.tasks.filter(priority="high").count()
 
 
 class BoardRetrieveSerializer(serializers.ModelSerializer):
@@ -68,7 +68,7 @@ class BoardRetrieveSerializer(serializers.ModelSerializer):
         ]
 
     def get_tasks(self, obj):
-        return []
+        return TaskSerializer(obj.tasks.all(), many=True).data
 
 
 class BoardUpdateSerializer(serializers.ModelSerializer):
@@ -118,3 +118,49 @@ class BoardUpdateSerializer(serializers.ModelSerializer):
             instance.members.set(members)
 
         return instance
+
+
+class TaskSerializer(serializers.ModelSerializer):
+    creator_id = serializers.IntegerField(source="creator.id", read_only=True)
+
+    assignee = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        required=False,
+        allow_null=True
+    )
+
+    reviewer = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        required=False,
+        allow_null=True
+    )
+
+    assignee_data = serializers.SerializerMethodField()
+    reviewer_data = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Task
+        fields = [
+            "id",
+            "board",
+            "title",
+            "description",
+            "status",
+            "priority",
+            "assignee",
+            "reviewer",
+            "due_date",
+            "creator_id",
+            "assignee_data",
+            "reviewer_data",
+        ]
+
+    def get_assignee_data(self, obj):
+        if obj.assignee:
+            return BoardMemberSerializer(obj.assignee).data
+        return None
+
+    def get_reviewer_data(self, obj):
+        if obj.reviewer:
+            return BoardMemberSerializer(obj.reviewer).data
+        return None
