@@ -6,6 +6,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from auth_app.api.permissions import IsBoardOwnerMemberOrAdmin
+
 from .serializers import EmailCheckResponseSerializer, EmailCheckSerializer, LoginSerializer, RegistrationSerializer
 
 
@@ -58,7 +60,7 @@ class LoginView(APIView):
 
 
 class LogoutView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsBoardOwnerMemberOrAdmin]
 
     def post(self, request):
         request.user.auth_token.delete()
