@@ -1,6 +1,6 @@
-from rest_framework.routers import path
+from django.urls import path
 
-from kanban_app.api.views import BoardViewSet
+from kanban_app.api.views import BoardViewSet, TaskViewSet
 
 urlpatterns = [
     path(
@@ -19,5 +19,34 @@ urlpatterns = [
             "delete": "destroy",
         }),
         name="board-detail",
+    ),
+    path(
+        "tasks/",
+        TaskViewSet.as_view({
+            "post": "create",
+        }),
+        name="task-create",
+    ),
+    path(
+        "tasks/<int:pk>/",
+        TaskViewSet.as_view({
+            "patch": "partial_update",
+            "delete": "destroy",
+        }),
+        name="task-detail",
+    ),
+    path(
+        "tasks/assigned-to-me/",
+        TaskViewSet.as_view({
+            "get": "assigned_to_me",
+        }),
+        name="tasks-assigned-to-me",
+    ),
+    path(
+        "tasks/reviewing/",
+        TaskViewSet.as_view({
+            "get": "reviewing",
+        }),
+        name="tasks-reviewing",
     ),
 ]

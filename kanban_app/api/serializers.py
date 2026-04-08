@@ -123,13 +123,15 @@ class BoardUpdateSerializer(serializers.ModelSerializer):
 class TaskSerializer(serializers.ModelSerializer):
     creator_id = serializers.IntegerField(source="creator.id", read_only=True)
 
-    assignee = serializers.PrimaryKeyRelatedField(
+    assignee_id = serializers.PrimaryKeyRelatedField(
+        source="assignee",
         queryset=User.objects.all(),
         required=False,
         allow_null=True
     )
 
-    reviewer = serializers.PrimaryKeyRelatedField(
+    reviewer_id = serializers.PrimaryKeyRelatedField(
+        source="reviewer",
         queryset=User.objects.all(),
         required=False,
         allow_null=True
@@ -147,8 +149,8 @@ class TaskSerializer(serializers.ModelSerializer):
             "description",
             "status",
             "priority",
-            "assignee",
-            "reviewer",
+            "assignee_id",
+            "reviewer_id",
             "due_date",
             "creator_id",
             "assignee_data",
