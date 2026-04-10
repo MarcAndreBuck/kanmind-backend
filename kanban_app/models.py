@@ -96,4 +96,4 @@ class Comment(models.Model):
         ordering = ["created_at"]
 
     def __str__(self):
-        return f"Comment by {self.author.userprofile.fullname} on {self.task.title}"
+        return f"Comment by {self.author.profile.fullname} on {self.task.title}"
