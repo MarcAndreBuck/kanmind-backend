@@ -50,7 +50,7 @@ urlpatterns = [
         name="tasks-reviewing",
     ),
     path(
-        "tasks/<int:pk>/comments/",
+        "tasks/<int:task_id>/comments/",
         TaskCommentView.as_view(),
         name="task-comments",
     ),
