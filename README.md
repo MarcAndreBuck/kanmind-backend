@@ -1,166 +1,158 @@
-# KanMind Backend
+# KanMind Backend API
 
-Backend for a Kanban application built with Django and Django REST Framework.
+This project was built as part of my backend training at the Developer Akademie.
 
-The project is structured in a modular way and follows common backend patterns like separation of concerns (models, serializers, views, permissions).
-
----
-
-## Features
-
-- User registration
-- Login with token authentication
-- User profile with fullname
-- Basic project structure for boards and tasks
+The goal was to create a clean and structured REST API for a Kanban-style task management app using Django and Django REST Framework.  
+I focused on keeping the code readable, modular and as close as possible to a real-world setup (especially permissions and data handling).
 
 ---
 
-## Tech Stack
+##  What this project does
+
+- User registration & login (token-based authentication)
+- Create and manage boards
+- Add members to boards
+- Create, update and delete tasks
+- Assign users (assignee / reviewer)
+- Comment system for tasks
+- Basic but realistic permission logic
+
+---
+
+##  Tech Stack
 
 - Python
 - Django
 - Django REST Framework
 - Token Authentication
-- SQLite (for development)
 
 ---
 
-## Project Structure
+##  Getting started
 
-core/  
-→ main project config (settings, urls)
+Clone the repository:
 
-auth_app/  
-→ handles authentication and user profile
+git clone <your-repo-url>  
+cd kanmind-backend  
 
-kanban_app/  
-→ will handle boards and tasks
+Create a virtual environment:
 
----
-
-## Setup
-
-Clone the repo:
-
-```bash
-git clone https://github.com/MarcAndreBuck/kanmind-backend.git
-cd kanmind-backend
-```
-
-Create virtual environment:
-
-```bash
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-```
+python -m venv venv  
+venv\Scripts\activate   # Windows  
 
 Install dependencies:
 
-```bash
-pip install -r requirements.txt
-```
+pip install -r requirements.txt  
 
 Run migrations:
 
-```bash
-python manage.py migrate
-```
+python manage.py migrate  
 
-Start server:
+Start the server:
 
-```bash
-python manage.py runserver
-```
+python manage.py runserver  
+
+API runs on:  
+http://127.0.0.1:8000/
 
 ---
 
-## API Endpoints
+##  Authentication
 
-### Register
+Token-based authentication is used.
 
-POST `/api/registration/`
+Register:
+POST /api/registration/
 
-```json
+Login:
+POST /api/login/
+
+Example response:
+
 {
-  "fullname": "Marc Buck",
-  "email": "test@mail.de",
-  "password": "123456",
-  "repeated_password": "123456"
-}
-```
-
-Response:
-
-```json
-{
-  "token": "your_token",
-  "fullname": "Marc Buck",
-  "email": "test@mail.de",
+  "token": "...",
+  "fullname": "...",
+  "email": "...",
   "user_id": 1
 }
-```
+
+Use the token:
+
+Authorization: Token YOUR_TOKEN
 
 ---
 
-### Login
+##  Main endpoints
 
-POST `/api/login/`
+### Boards
 
-```json
-{
-  "email": "test@mail.de",
-  "password": "123456"
-}
-```
-
-Response:
-
-```json
-{
-  "token": "your_token",
-  "fullname": "Marc Buck",
-  "email": "test@mail.de",
-  "user_id": 1
-}
-```
----
-
-### Logout
-
-POST `/api/logout/`
-
-Header:
-
-Authorization: Token <your_token>
-
-Response:
-
-200 OK
-
-```json
-{
-  "detail": "Logout successful. Token has been deleted."
-}
-```
----
-
-## Notes
-
-- Uses Django default User model
-- Fullname is stored in a separate UserProfile model
-- Email is used as login identifier
-- Passwords are hashed using Django's built-in system
+GET /api/boards/ → all boards (owner/member)  
+POST /api/boards/ → create board  
+GET /api/boards/{id}/ → board details  
+PATCH /api/boards/{id}/ → update board  
+DELETE /api/boards/{id}/ → delete (owner only)  
 
 ---
 
-## Status
+### Tasks
 
-Work in progress.
+POST /api/tasks/ → create task  
+PATCH /api/tasks/{id}/ → update task  
+DELETE /api/tasks/{id}/ → delete task  
 
-Authentication is implemented, next step is building boards and tasks.
+GET /api/tasks/assigned-to-me/ → assigned tasks  
+GET /api/tasks/reviewing/ → reviewing tasks  
 
 ---
 
-## Author
+### Comments
 
-Marc-André Buck
+GET /api/tasks/{task_id}/comments/ → list comments  
+POST /api/tasks/{task_id}/comments/ → create comment  
+DELETE /api/tasks/{task_id}/comments/{comment_id}/ → delete comment  
+
+---
+
+### Email check
+
+GET /api/email-check/?email=test@mail.com  
+
+---
+
+##  Permissions
+
+I tried to keep permissions simple but realistic:
+
+- Authentication required for most endpoints
+- Board:
+  - Owner → full access
+  - Members → read & update
+- Tasks:
+  - Only board members can interact
+  - Delete → creator or board owner
+- Comments:
+  - Only author can delete
+
+---
+
+##  Project structure
+
+core/  
+auth_app/  
+kanban_app/  
+    api/  
+
+---
+
+##  Notes
+
+- Built during my Developer Akademie backend training
+- Focus on clean structure and understandable logic
+- No database or virtual environment included
+- API follows the given endpoint documentation
+
+---
+
+##  Status
+
+Backend is functional and ready to be used with a frontend.
