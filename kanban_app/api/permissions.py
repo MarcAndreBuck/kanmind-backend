@@ -1,5 +1,7 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
+from kanban_app.models import Board
+
 
 class IsBoardOwnerMemberOrAdmin(BasePermission):
     def has_object_permission(self, request, view, obj):
@@ -8,14 +10,17 @@ class IsBoardOwnerMemberOrAdmin(BasePermission):
         if user.is_staff:
             return True
 
-        if request.method in SAFE_METHODS:
-            return obj.owner == user or obj.members.filter(id=user.id).exists()
+        is_board_member = obj.members.filter(id=user.id).exists()
+        is_board_owner = obj.owner == user
 
-        if request.method in ["PUT", "PATCH"]:
-            return obj.owner == user or obj.members.filter(id=user.id).exists()
+        if request.method in SAFE_METHODS:
+            return is_board_owner or is_board_member
+
+        if request.method in ["PATCH", "PUT"]:
+            return is_board_owner or is_board_member
 
         if request.method == "DELETE":
-            return obj.owner == user
+            return is_board_owner
 
         return False
 
@@ -31,19 +36,14 @@ class IsBoardMemberForTask(BasePermission):
             board_id = request.data.get("board")
 
             if not board_id:
-                return False
-
-            from kanban_app.models import Board
+                return True
 
             try:
                 board = Board.objects.get(id=board_id)
             except Board.DoesNotExist:
-                return False
+                return True
 
-            return (
-                board.owner == user
-                or board.members.filter(id=user.id).exists()
-            )
+            return board.owner == user or board.members.filter(id=user.id).exists()
 
         return True
 
@@ -53,19 +53,16 @@ class IsBoardMemberForTask(BasePermission):
         if user.is_staff:
             return True
 
-        if request.method in SAFE_METHODS:
-            return (
-                obj.board.owner == user
-                or obj.board.members.filter(id=user.id).exists()
-            )
+        is_board_member = obj.board.members.filter(id=user.id).exists()
+        is_board_owner = obj.board.owner == user
 
-        if request.method in ["PATCH"]:
-            return (
-                obj.board.owner == user
-                or obj.board.members.filter(id=user.id).exists()
-            )
+        if request.method in SAFE_METHODS:
+            return is_board_owner or is_board_member
+
+        if request.method == "PATCH":
+            return is_board_owner or is_board_member
 
         if request.method == "DELETE":
-            return obj.creator == user or obj.board.owner == user
+            return obj.creator == user or is_board_owner
 
         return False
