@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
+
 from kanban_app.models import Board, Comment, Task
 
 
@@ -59,13 +60,7 @@ class BoardRetrieveSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Board
-        fields = [
-            "id",
-            "title",
-            "owner_id",
-            "members",
-            "tasks",
-        ]
+        fields = ["id", "title", "owner_id", "members", "tasks"]
 
     def get_tasks(self, obj):
         return TaskSerializer(obj.tasks.all(), many=True).data
@@ -83,13 +78,7 @@ class BoardUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Board
-        fields = [
-            "id",
-            "title",
-            "members",
-            "owner_data",
-            "members_data",
-        ]
+        fields = ["id", "title", "members", "owner_data", "members_data"]
 
     def get_owner_data(self, obj):
         return {
@@ -110,7 +99,6 @@ class BoardUpdateSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         members = validated_data.pop("members", None)
-
         instance.title = validated_data.get("title", instance.title)
         instance.save()
 
@@ -121,24 +109,23 @@ class BoardUpdateSerializer(serializers.ModelSerializer):
 
 
 class TaskSerializer(serializers.ModelSerializer):
-    creator_id = serializers.IntegerField(source="creator.id", read_only=True)
-
     assignee_id = serializers.PrimaryKeyRelatedField(
         source="assignee",
         queryset=User.objects.all(),
         required=False,
-        allow_null=True
+        allow_null=True,
+        write_only=True,
     )
-
     reviewer_id = serializers.PrimaryKeyRelatedField(
         source="reviewer",
         queryset=User.objects.all(),
         required=False,
-        allow_null=True
+        allow_null=True,
+        write_only=True,
     )
-
-    assignee_data = serializers.SerializerMethodField()
-    reviewer_data = serializers.SerializerMethodField()
+    assignee = BoardMemberSerializer(read_only=True)
+    reviewer = BoardMemberSerializer(read_only=True)
+    comments_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
@@ -151,22 +138,12 @@ class TaskSerializer(serializers.ModelSerializer):
             "priority",
             "assignee_id",
             "reviewer_id",
+            "assignee",
+            "reviewer",
             "due_date",
-            "creator_id",
-            "assignee_data",
-            "reviewer_data",
+            "comments_count",
         ]
 
-    def get_assignee_data(self, obj):
-        if obj.assignee:
-            return BoardMemberSerializer(obj.assignee).data
-        return None
-
-    def get_reviewer_data(self, obj):
-        if obj.reviewer:
-            return BoardMemberSerializer(obj.reviewer).data
-        return None
-    
     def get_comments_count(self, obj):
         return obj.comments.count()
 
