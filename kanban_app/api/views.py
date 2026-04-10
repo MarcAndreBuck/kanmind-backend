@@ -24,20 +24,25 @@ class BoardViewSet(ModelViewSet):
     queryset = Board.objects.all()
     permission_classes = [IsAuthenticated, IsBoardOwnerMemberOrAdmin]
 
-    def get_queryset(self):
-        user = self.request.user
-
-        if user.is_staff:
-            return Board.objects.all()
-
-        return Board.objects.filter(Q(owner=user) | Q(members=user)).distinct()
-
     def get_serializer_class(self):
         if self.action == "retrieve":
             return BoardRetrieveSerializer
         if self.action == "partial_update":
             return BoardUpdateSerializer
         return BoardListSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+
+        if self.action == "list":
+            if user.is_staff:
+                return Board.objects.all()
+
+            return Board.objects.filter(
+                Q(owner=user) | Q(members=user)
+            ).distinct()
+
+        return Board.objects.all()
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -52,23 +57,29 @@ class TaskViewSet(ModelViewSet):
     def get_queryset(self):
         user = self.request.user
 
-        if user.is_staff:
-            return Task.objects.all()
+        if self.action == "list":
+            return Task.objects.none()
 
-        return Task.objects.filter(
-            Q(board__owner=user) | Q(board__members=user)
-        ).distinct()
+        if self.action in ["assigned_to_me", "reviewing"]:
+            if user.is_staff:
+                return Task.objects.all()
+
+            return Task.objects.filter(
+                Q(board__owner=user) | Q(board__members=user)
+            ).distinct()
+
+        return Task.objects.all()
 
     def perform_create(self, serializer):
         serializer.save(creator=self.request.user)
 
     def assigned_to_me(self, request):
-        tasks = self.get_queryset().filter(assignee=request.user)
+        tasks = Task.objects.filter(assignee=request.user).distinct()
         serializer = self.get_serializer(tasks, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def reviewing(self, request):
-        tasks = self.get_queryset().filter(reviewer=request.user)
+        tasks = Task.objects.filter(reviewer=request.user).distinct()
         serializer = self.get_serializer(tasks, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

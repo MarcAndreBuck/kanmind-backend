@@ -147,6 +147,28 @@ class TaskSerializer(serializers.ModelSerializer):
     def get_comments_count(self, obj):
         return obj.comments.count()
 
+    def validate(self, attrs):
+        board = attrs.get("board") or getattr(self.instance, "board", None)
+        assignee = attrs.get("assignee")
+        reviewer = attrs.get("reviewer")
+
+        if assignee and assignee != board.owner and not board.members.filter(id=assignee.id).exists():
+            raise serializers.ValidationError(
+                {"assignee_id": "Assignee must be a board member."}
+            )
+
+        if reviewer and reviewer != board.owner and not board.members.filter(id=reviewer.id).exists():
+            raise serializers.ValidationError(
+                {"reviewer_id": "Reviewer must be a board member."}
+            )
+
+        if self.instance and "board" in attrs:
+            raise serializers.ValidationError(
+                {"board": "Changing the board is not allowed."}
+            )
+
+        return attrs
+
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SerializerMethodField()

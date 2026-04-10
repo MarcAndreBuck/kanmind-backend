@@ -1,4 +1,5 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
+from rest_framework.exceptions import NotFound
 
 from kanban_app.models import Board
 
@@ -41,7 +42,7 @@ class IsBoardMemberForTask(BasePermission):
             try:
                 board = Board.objects.get(id=board_id)
             except Board.DoesNotExist:
-                return True
+                raise NotFound("Board not found.")
 
             return board.owner == user or board.members.filter(id=user.id).exists()
 
