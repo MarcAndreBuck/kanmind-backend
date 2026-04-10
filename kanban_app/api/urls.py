@@ -1,6 +1,6 @@
 from django.urls import path
 
-from kanban_app.api.views import BoardViewSet, TaskViewSet
+from kanban_app.api.views import BoardViewSet, TaskCommentDetailView, TaskCommentView, TaskViewSet
 
 urlpatterns = [
     path(
@@ -48,5 +48,15 @@ urlpatterns = [
             "get": "reviewing",
         }),
         name="tasks-reviewing",
+    ),
+    path(
+        "tasks/<int:pk>/comments/",
+        TaskCommentView.as_view(),
+        name="task-comments",
+    ),
+    path(
+        "tasks/<int:task_id>/comments/<int:comment_id>/",
+        TaskCommentDetailView.as_view(),
+        name="task-comment-detail",
     ),
 ]
