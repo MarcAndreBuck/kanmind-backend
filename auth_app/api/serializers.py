@@ -29,16 +29,32 @@ class RegistrationSerializer(serializers.ModelSerializer):
         }
 
     def validate_email(self, value):
+        """Validate that the email is unique.
+
+        Checks if a user with the given email already exists.
+        Raises ValidationError if email is already in use.
+        """
         if User.objects.filter(email=value).exists():
             raise serializers.ValidationError("Email already exists")
         return value
 
     def validate(self, attrs):
+        """Validate the registration data.
+
+        Ensures that password and repeated_password match.
+        Raises ValidationError if passwords do not match.
+        """
         if attrs["password"] != attrs["repeated_password"]:
             raise serializers.ValidationError("Passwords don't match")
         return attrs
 
     def save(self,  **kwargs):
+        """Create and save a new user account with profile.
+
+        Creates a User instance with email and password.
+        Also creates a UserProfile with the fullname.
+        Returns the created User instance.
+        """
         account = User(
             email=self.validated_data["email"], username=self.validated_data["email"])
 
@@ -73,4 +89,9 @@ class EmailCheckResponseSerializer(serializers.ModelSerializer):
         fields = ["id", "email", "fullname"]
 
     def get_fullname(self, obj):
+        """Return the full name from the user's profile.
+
+        Retrieves the fullname field from the associated UserProfile.
+        Used for serializing user data with full name.
+        """
         return obj.profile.fullname

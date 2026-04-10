@@ -6,6 +6,14 @@ from kanban_app.models import Board
 
 class IsBoardOwnerMemberOrAdmin(BasePermission):
     def has_object_permission(self, request, view, obj):
+        """
+        Check if the user has permission to access the board object.
+
+        Grants permission if the user is a staff member, board owner, or board member.
+        For safe methods (GET, HEAD, OPTIONS), allows owners and members.
+        For PATCH/PUT, allows owners and members.
+        For DELETE, only allows owners.
+        """
         user = request.user
 
         if user.is_staff:
@@ -28,6 +36,12 @@ class IsBoardOwnerMemberOrAdmin(BasePermission):
 
 class IsBoardMemberForTask(BasePermission):
     def has_permission(self, request, view):
+        """
+        Check if the user has permission to perform the action on tasks.
+
+        For create action, verifies the user is authenticated and is the board owner or member.
+        For other actions, allows authenticated users.
+        """
         user = request.user
 
         if not user or not user.is_authenticated:
@@ -49,6 +63,14 @@ class IsBoardMemberForTask(BasePermission):
         return True
 
     def has_object_permission(self, request, view, obj):
+        """
+        Check if the user has permission to access the task object.
+
+        Grants permission if the user is staff, board owner, or board member.
+        For safe methods, allows owners and members.
+        For PATCH, allows owners and members.
+        For DELETE, allows task creator or board owner.
+        """
         user = request.user
 
         if user.is_staff:

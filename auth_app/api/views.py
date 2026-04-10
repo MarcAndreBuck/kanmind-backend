@@ -13,6 +13,12 @@ class RegistrationView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+        """Handle user registration.
+
+        Validates registration data and creates a new user account.
+        Generates an authentication token for the new user.
+        Returns user data and token on success, errors on failure.
+        """
         serializer = RegistrationSerializer(data=request.data)
 
         if serializer.is_valid():
@@ -34,6 +40,12 @@ class LoginView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+        """Handle user login.
+
+        Authenticates user with email and password.
+        Generates or retrieves authentication token.
+        Returns user data and token on success, error on failure.
+        """
         serializer = LoginSerializer(data=request.data)
 
         if serializer.is_valid():
@@ -61,6 +73,12 @@ class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        """Handle user logout.
+
+        Deletes the authentication token for the current user.
+        Ensures the user is logged out securely.
+        Returns success message.
+        """
         request.user.auth_token.delete()
         return Response({"detail": "Logout successful. Token has been deleted."}, status=status.HTTP_200_OK)
 
@@ -69,6 +87,12 @@ class EmailCheckView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        """Check if an email exists in the system.
+
+        Validates the email parameter from query params.
+        Retrieves user data if email exists.
+        Returns user info or not found error.
+        """
         serializer = EmailCheckSerializer(data=request.query_params)
 
         if not serializer.is_valid():

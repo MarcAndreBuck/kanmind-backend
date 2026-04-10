@@ -25,6 +25,12 @@ class BoardViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated, IsBoardOwnerMemberOrAdmin]
 
     def get_serializer_class(self):
+        """Return the appropriate serializer class based on the action.
+
+        Uses BoardRetrieveSerializer for retrieve action.
+        Uses BoardUpdateSerializer for partial_update action.
+        Defaults to BoardListSerializer for other actions.
+        """
         if self.action == "retrieve":
             return BoardRetrieveSerializer
         if self.action == "partial_update":
@@ -32,6 +38,12 @@ class BoardViewSet(ModelViewSet):
         return BoardListSerializer
 
     def get_queryset(self):
+        """Return the queryset of boards based on user permissions.
+
+        For list action, returns all boards if user is staff.
+        Otherwise, returns boards where user is owner or member.
+        For other actions, returns all boards.
+        """
         user = self.request.user
 
         if self.action == "list":
@@ -45,6 +57,11 @@ class BoardViewSet(ModelViewSet):
         return Board.objects.all()
 
     def perform_create(self, serializer):
+        """Create a new board with the current user as owner.
+
+        Saves the board instance using the serializer.
+        Sets the requesting user as the board owner.
+        """
         serializer.save(owner=self.request.user)
 
 
@@ -55,6 +72,7 @@ class TaskViewSet(ModelViewSet):
     http_method_names = ["get", "post", "patch", "delete"]
 
     def get_queryset(self):
+        """Return the queryset of tasks based on user permissions and action."""
         user = self.request.user
 
         if self.action == "list":
@@ -71,14 +89,21 @@ class TaskViewSet(ModelViewSet):
         return Task.objects.all()
 
     def perform_create(self, serializer):
+        """Create a new task with the current user as creator."""
         serializer.save(creator=self.request.user)
 
     def assigned_to_me(self, request):
+        """Return tasks assigned to the current user."""
         tasks = Task.objects.filter(assignee=request.user).distinct()
         serializer = self.get_serializer(tasks, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def reviewing(self, request):
+        """Return tasks where the current user is the reviewer.
+
+        Retrieves all tasks assigned to the user for review.
+        Returns serialized task data in the response.
+        """
         tasks = Task.objects.filter(reviewer=request.user).distinct()
         serializer = self.get_serializer(tasks, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -88,12 +113,22 @@ class TaskCommentView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get_task(self, task_id):
+        """Retrieve a task by its ID.
+
+        Attempts to get the task from the database.
+        Returns the task object if found, otherwise None.
+        """
         try:
             return Task.objects.get(id=task_id)
         except Task.DoesNotExist:
             return None
 
     def user_can_access_task(self, task, user):
+        """Check if the user has access to the task.
+
+        Grants access if the user is staff, board owner, or board member.
+        Returns True if access is allowed, False otherwise.
+        """
         return (
             user.is_staff
             or task.board.owner == user
@@ -101,6 +136,11 @@ class TaskCommentView(APIView):
         )
 
     def get(self, request, task_id):
+        """Retrieve all comments for a specific task.
+
+        Checks if the task exists and user has access.
+        Returns serialized comment data or appropriate error response.
+        """
         task = self.get_task(task_id)
 
         if task is None:
@@ -120,6 +160,12 @@ class TaskCommentView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, task_id):
+        """Create a new comment for a specific task.
+
+        Validates task existence and user access.
+        Serializes and saves the comment with the current user as author.
+        Returns the created comment data or error response.
+        """
         task = self.get_task(task_id)
 
         if task is None:
@@ -148,12 +194,23 @@ class TaskCommentDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get_comment(self, task_id, comment_id):
+        """Retrieve a specific comment by task and comment ID.
+
+        Attempts to get the comment from the database.
+        Returns the comment object if found, otherwise None.
+        """
         try:
             return Comment.objects.get(id=comment_id, task_id=task_id)
         except Comment.DoesNotExist:
             return None
 
     def delete(self, request, task_id, comment_id):
+        """Delete a specific comment.
+
+        Checks if the comment exists and user has permission to delete.
+        Only the author or staff can delete the comment.
+        Returns appropriate response or error.
+        """
         comment = self.get_comment(task_id, comment_id)
 
         if comment is None:

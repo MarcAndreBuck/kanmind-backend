@@ -3,6 +3,12 @@ from django.db import models
 
 
 class Board(models.Model):
+    """
+    Represents a Kanban board for task management.
+
+    Contains title, owner, and members. Supports multiple tasks.
+    Used to organize and manage project workflows.
+    """
     title = models.CharField(max_length=255)
 
     owner = models.ForeignKey(
@@ -24,10 +30,17 @@ class Board(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
+        """Return the title of the board as its string representation."""
         return self.title
 
 
 class Task(models.Model):
+    """
+    Represents a task within a Kanban board.
+
+    Includes details like title, description, status, priority, and assignments.
+    Supports workflow tracking from creation to completion.
+    """
     STATUS_CHOICES = [
         ("to-do", "To Do"),
         ("in-progress", "In Progress"),
@@ -75,10 +88,17 @@ class Task(models.Model):
         ordering = ["due_date"]
 
     def __str__(self):
+        """Return the title of the task as its string representation."""
         return self.title
 
 
 class Comment(models.Model):
+    """
+    Represents a comment on a task.
+
+    Allows users to add notes or discussions to tasks.
+    Tracks author and creation time for accountability.
+    """
     task = models.ForeignKey(
         Task,
         on_delete=models.CASCADE,
@@ -96,4 +116,5 @@ class Comment(models.Model):
         ordering = ["created_at"]
 
     def __str__(self):
+        """Return a string representation of the comment including author and task."""
         return f"Comment by {self.author.profile.fullname} on {self.task.title}"
