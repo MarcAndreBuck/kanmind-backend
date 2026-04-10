@@ -5,7 +5,6 @@ from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from kanban_app.api.permissions import IsBoardOwnerMemberOrAdmin
 
 from .serializers import EmailCheckResponseSerializer, EmailCheckSerializer, LoginSerializer, RegistrationSerializer
 
@@ -26,9 +25,9 @@ class RegistrationView(APIView):
                 "fullname": saved_account.profile.fullname,
                 "email": saved_account.email,
                 "user_id": saved_account.id
-            }, status=201)
+            }, status= status.HTTP_201_CREATED)
 
-        return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LoginView(APIView):
@@ -51,15 +50,15 @@ class LoginView(APIView):
                     "fullname": user.profile.fullname,
                     "email": user.email,
                     "user_id": user.id
-                }, status=200)
+                }, status= status.HTTP_200_OK)
 
-            return Response({"error": "Invalid email or password"}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"error": "Invalid email or password"}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LogoutView(APIView):
-    permission_classes = [IsAuthenticated, IsBoardOwnerMemberOrAdmin]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         request.user.auth_token.delete()
